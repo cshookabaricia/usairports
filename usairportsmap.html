@@ -8,7 +8,6 @@
         <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
         <link rel="stylesheet" href="css/main.css" type="text/css">
 
-
         <style>
             html, body, #map { width: 100%; height: 100%; margin: 0; background: #fff; }
             .legend {
@@ -51,12 +50,14 @@
                 color: rgba(35, 35, 35, 0.78)
             }
         </style>
+
         <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
         <script src="https://unpkg.com/labelgun@6.0.0/lib/labelgun.min.js"></script>
         <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.3.4/chroma.min.js"></script>
+
 </head>
 <body>
 <!-- Content -->
@@ -71,49 +72,46 @@
 
         //map object
         var mymap = L.map('map', {
-            center: [47.01, -98.02],
-            zoom: 5,
-            maxZoom: 10
-            minZoom: 3
+            center: [50.8304167,-115.1539487],
+            zoom: 4,
+            maxZoom: 11,
+            minZoom: 3,
             detectRetina: true});
 
         //basemap
-        L.tileLayer('http://{s}.api.cartocdn.com/{base-midnight}/{z}/{x}/{y}.png',
-            {
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiY3Nob29rYWJhcmljaWEiLCJhIjoiY2pnb2Z1NW1zMDBsdTMzbnZ0Z2dyOTdoMiJ9.MKx_N6iKPgbIuQyWx2qJ3g').addTo(mymap);
 
-                //airports layer
+        //airports layer
                 var airports = null;
 
         // color set
-        var colors = chroma.scale(['BuBa']).mode('lch').colors(2);
+        var colors = chroma.scale(['Black', 'Navy']).mode('lch').colors(2);
 
         //marker colors
         for (i = 0; i < 2; i++) {
             $('head').append($("<style> .marker-color-" + (i + 1).toString() + " { color: " + colors[i] + "; font-size: 15px; text-shadow: 0 0 3px #ffffff;} </style>"));
         }
 
-        //geojson of airports in usa
-        airports = L.geoJson.ajax("assets/airports.geojson", {
+        // Get GeoJSON and put on it on the map when it loads
+        airports= L.geoJson.ajax("assets/airports.geojson", {
+            // assign a function to the onEachFeature parameter of the airports object.
+            // Then each (point) feature will bind a popup window.
+            // The content of the popup window is the value of `feature.properties.CITY`
             onEachFeature: function (feature, layer) {
-                layer.bindPopup(feature.properties.CITY)
+                layer.bindPopup(feature.properties.CITY);
             },
             pointToLayer: function (feature, latlng) {
                 var id = 0;
-                if (feature.properties.CNTL_TWR === "Y") {
-                    id = 0;
-                }
-                else {
-                    id = 1;
-                } // "N"
-                return L.marker(latlng, {icon: L.divIcon({className: 'fa fa-plane marker-color-' + (id + 1).toString()})});
-            }
-        }).addTo(mymap);
-        },
-        attribution: 'Airport Data &copy; USGS  | States of the USA &copy; Mike Bostock of D3 | Base Map &copy; CartoDB | Made by Christine Shook-Abaricia'
+                if (feature.properties.CNTL_TWR == "Y") { id = 0; }
+                else { id = 1;} // "N"
+                return L.marker(latlng, {icon: L.divIcon({className: 'fa fa-plane marker-color-' + (id + 1).toString() })});
+            },
+
+        attribution: 'Airport Data &copy; USGS  | States of the USA &copy; Mike Bostock of D3 | Base Map &copy; MapBox | Made by Christine Shook-Abaricia'
         }).addTo(mymap);
 
         //function color ramp set
-        colors = chroma.scale('BuBa').colors(5);
+        colors = chroma.scale('BuPu').colors(5);
         function setColor(density) {
             var id = 0;
             if (density > 18) { id = 4; }
@@ -144,7 +142,7 @@
         ).addTo(mymap);
 
         // 9. Create Leaflet Control Object for Legend
-        var legend = L.control({position: 'bottomleft'});
+        var legend = L.control({position: 'topright'});
 
         // 10. Function that runs when legend is added to map
         legend.onAdd = function () {
@@ -152,13 +150,13 @@
             // Create Div Element and Populate it with HTML
             var div = L.DomUtil.create('div', 'legend');
             div.innerHTML += '<b>Airports in US States</b><br />';
+            div.innerHTML += '<hr><b><u># Airports per State</u><b><br />';
             div.innerHTML += '<i style="background: ' + colors[4] + '; opacity: 0.5"></i><p>19+</p>';
             div.innerHTML += '<i style="background: ' + colors[3] + '; opacity: 0.5"></i><p>14-18</p>';
             div.innerHTML += '<i style="background: ' + colors[2] + '; opacity: 0.5"></i><p>11-13</p>';
             div.innerHTML += '<i style="background: ' + colors[1] + '; opacity: 0.5"></i><p> 6-10</p>';
             div.innerHTML += '<i style="background: ' + colors[0] + '; opacity: 0.5"></i><p> 0- 5</p>';
-            div.innerHTML += '<p>Number of Airports in State</p>';
-            div.innerHTML += '<hr><b>Control Tower Indicator <b><br />';
+            div.innerHTML += '<hr><b><u>Control Tower Indicator</u><b><br />';
             div.innerHTML += '<i class="fa fa-plane marker-color-1"></i><p> Airport with Control Tower</p>';
             div.innerHTML += '<i class="fa fa-plane marker-color-2"></i><p> Airport with no Control Tower</p>';
             // Return the Legend div containing the HTML content
